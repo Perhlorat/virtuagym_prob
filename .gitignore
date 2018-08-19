@@ -1,0 +1,11 @@
+*~
+*.pyo
+*.pyc
+*.orig
+*.log
+.sublime*
+*.sublime*
+.idea
+static
+media
+/env_files/web.env

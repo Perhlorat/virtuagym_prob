@@ -1,0 +1,42 @@
+version: '2'
+services:
+  postgres:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    env_file:
+      - ./env_files/web.env
+    expose:
+      - "5432"
+
+  web:
+    restart: always
+    env_file:
+      - ./env_files/web.env
+    build: .
+    links:
+      - postgres:postgres
+    command: bash -c "python3 /service/managers/manage.py migrate && python3 /service/managers/manage.py collectstatic --noinput && gunicorn wsgi.wsgi:application -w 2 -b :8000"
+    depends_on:
+      - postgres
+    volumes:
+      - .:/service
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+
+  nginx:
+    restart: always
+    build: ./nginx/
+    ports:
+      - "80:80"
+    links:
+      - web:web
+    volumes:
+      - ./nginx:/nginx
+      - ./nginx/nginx:/etc/nginx/conf.d
+      - ./static:/static/
+    depends_on:
+      - web
